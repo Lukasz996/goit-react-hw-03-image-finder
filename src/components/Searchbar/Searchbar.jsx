@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import searchIcon from '../../assets/svg/symbol.defs.svg';
 
 class SearchBar extends Component {
   state = {
@@ -23,9 +22,6 @@ class SearchBar extends Component {
       <header className="searchbar">
         <form onSubmit={this.handleSubmit} className="searchform">
           <button type="submit" className="searchform-button">
-            <svg className="icon" id="icon-search">
-              <use href={searchIcon + '#icon-search'}></use>
-            </svg>
             <span className="searchform-button-label">Search</span>
           </button>
 
