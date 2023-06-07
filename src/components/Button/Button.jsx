@@ -1,16 +1,21 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import { Component } from 'react';
 
-const Button = ({ onClick }) => {
-  return (
-    <button className="button" onClick={onClick}>
-      Load more
-    </button>
-  );
-};
+class Button extends Component {
+  render() {
+    return (
+      <div className="button-container">
+        <button className="button" onClick={this.props.setPage}>
+          {this.props.children}
+        </button>
+      </div>
+    );
+  }
+}
 
 Button.propTypes = {
-    onClick: PropTypes.func.isRequired,
-}
+  setPage: PropTypes.func.isRequired,
+  children: PropTypes.node.isRequired,
+};
 
 export default Button;

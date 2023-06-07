@@ -1,65 +1,85 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Searchbar from './Searchbar/Searchbar';
-import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
-import Loader from './Loader/Loader';
+import ImageGallery from './ImageGallery/ImageGallery';
 import Modal from './Modal/Modal';
+import SearchBar from './Searchbar/Searchbar';
+import Loader from './Loader/Loader';
+import { getImages } from 'api/getImages';
+import { Component } from 'react';
 
-const App = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(null);
-
-  const fetchImages = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `https://pixabay.com/api/?q=${searchQuery}&page=${page}&key=29601510-cb62b0e552e92b2824471424b&image_type=photo&orientation=horizontal&per_page=12`
-      );
-      const data = await response.json();
-      setImages(prevImages =>
-        page === 1 ? data.hits : [...prevImages, ...data.hits]
-      );
-    } catch (error) {
-      console.log('Error fetching images:', error);
-    }
-    setLoading(false);
-  }, [searchQuery, page]);
-
-  useEffect(() => {
-    fetchImages();
-  }, [fetchImages]);
-
-  const handleSearchSubmit = value => {
-    setSearchQuery(value);
-    setPage(1);
+class App extends Component {
+  state = {
+    query: '',
+    page: 1,
+    images: [],
+    isLoading: false,
+    error: null,
+    currentImage: null,
+    openModal: false,
   };
 
-  const handleLoadMore = () => {
-    setPage(prevPage => prevPage + 1);
+  async componentDidMount() {
+    const { page, query } = this.state;
+    this.setState({ isLoading: true });
+    const images = await getImages(page, query);
+    this.setState({ images: images.hits, isLoading: false });
+  }
+
+  handleSearch = async query => {
+    this.setState({ isLoading: true });
+    const images = await getImages(1, query);
+    this.setState({
+      images: images.hits,
+      page: 1,
+      query: query,
+      isLoading: false,
+    });
   };
 
-  const handleImageClick = image => {
-    setSelectedImage(image);
+  handleLoadMore = async () => {
+    const { page, query } = this.state;
+    this.setState({ isLoading: true });
+    const images = await getImages(page + 1, query);
+    this.setState({
+      images: [...this.state.images, ...images.hits],
+      page: page + 1,
+      isLoading: false,
+    });
   };
 
-  const handleCloseModal = () => {
-    setSelectedImage(null);
+  handleClickImage = image => {
+    this.setState({ currentImage: image, openModal: true });
   };
 
-  return (
-    <div className="app">
-      <Searchbar onSubmit={handleSearchSubmit} />
-      <ImageGallery images={images} onItemClick={handleImageClick} />
-      {loading && <Loader />}
-      {images.length > 0 && <Button onClick={handleLoadMore} />}
-      {selectedImage && (
-        <Modal image={selectedImage} onClose={handleCloseModal} />
-      )}
-    </div>
-  );
-};
+  handleCloseModal = () => {
+    this.setState({ openModal: false });
+  };
+
+  render() {
+    return (
+      <div className="app">
+        <SearchBar onSearch={this.handleSearch} />
+
+        <ImageGallery
+          onClick={this.handleClickImage}
+          images={this.state.images}
+          page={this.state.page}
+          query={this.state.query}
+        />
+
+        {this.state.isLoading ? (
+          <Loader />
+        ) : (
+          <Button setPage={this.handleLoadMore}>Load more</Button>
+        )}
+
+        <Modal
+          image={this.state.currentImage}
+          isOpen={this.state.openModal}
+          onClose={this.handleCloseModal}
+        />
+      </div>
+    );
+  }
+}
 
 export default App;

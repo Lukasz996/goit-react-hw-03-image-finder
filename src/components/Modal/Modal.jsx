@@ -1,24 +1,46 @@
+import PropTypes from 'prop-types';
 import React from 'react';
-import PropTypes from 'prop-types'
+import { Component } from 'react';
+import { createPortal } from 'react-dom';
 
-const Modal = ({ image, onClose }) => {
-  const handleClose = () => {
-    onClose();
+class Modal extends Component {
+  componentDidMount() {
+    document.addEventListener('keydown', this.handleClose, false);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', null, false);
+  }
+
+  handleClose = e => {
+    const element = e.target;
+    if (element.className === 'overlay' || e.key === 'Escape') {
+      const { onClose } = this.props;
+      onClose && onClose();
+    }
   };
-  return (
-    <div className="overlay" onClick={handleClose}>
-      <div className="modal">
-        <img src={image.largeImageURL} alt="" />
-      </div>
-    </div>
-  );
-};
+
+  render() {
+    return (
+      this.props.isOpen &&
+      createPortal(
+        <aside>
+          <div class="overlay" onClick={this.handleClose}>
+            <div class="modal">
+              <img src={this.props.image} alt="pic" />
+            </div>
+          </div>
+        </aside>,
+        document.body
+      )
+    );
+  }
+}
 
 Modal.propTypes = {
-    image: PropTypes.shape({
-      largeImageURL: PropTypes.string.isRequired,
-    }).isRequired,
-    onClose: PropTypes.func.isRequired,
-  };
+  isOpen: PropTypes.bool.isRequired,
+  image: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
 
 export default Modal;
